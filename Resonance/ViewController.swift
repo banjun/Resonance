@@ -1,7 +1,7 @@
 import Cocoa
 import Combine
 
-class ViewController: NSViewController {
+class ViewController: NSViewController, NSToolbarDelegate {
     private var client: Client?
     private var cancellables = Set<AnyCancellable>()
     private let eventsView = StickyCollectionView()
@@ -30,6 +30,8 @@ class ViewController: NSViewController {
             keyboard.activeNotes = activeNotes
         }
     }
+
+    private let midiSynth = MIDISynth()
 
     override func viewDidLoad() {
         eventsView.collectionView.collectionViewLayout = EventsLayout()
@@ -70,9 +72,45 @@ class ViewController: NSViewController {
             default:
                 break
             }
+
+            midiSynth.play(event: packet.data)
         }.store(in: &cancellables)
         NSLog("client.source = \(String(describing: self.client?.source))")
+
+
+        let toolbar = NSToolbar()
+        toolbar.delegate = self
+        toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier.flexibleSpace, at: 0)
+        toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier(rawValue: "MIDISynth"), at: 1)
+        view.window?.toolbar = toolbar
     }
+
+    let midiSynthToolbarItem = NSToolbarItem(itemIdentifier: .midiSynth)
+
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        switch itemIdentifier {
+        case .midiSynth:
+            midiSynthToolbarItem.image = NSImage(named: NSImage.slideshowTemplateName)
+            midiSynthToolbarItem.label = midiSynth.name + " Muted"
+            midiSynthToolbarItem.target = nil
+            midiSynthToolbarItem.action = #selector(ViewController.toggleMIDISynth)
+            return midiSynthToolbarItem
+        default:
+            return .init(itemIdentifier: itemIdentifier)
+        }
+    }
+    
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiSynth] }
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiSynth] }
+
+    @objc private func toggleMIDISynth() {
+        midiSynth.isEnabled.toggle()
+        midiSynthToolbarItem.label = midiSynth.name + (midiSynth.isEnabled ? " Enabled" : " Muted")
+    }
+}
+
+private extension NSToolbarItem.Identifier {
+    static let midiSynth: NSToolbarItem.Identifier = .init("MIDISynth")
 }
 
 final class EventsLayout: NSCollectionViewLayout {

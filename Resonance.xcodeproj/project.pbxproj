@@ -11,6 +11,7 @@
 		EA26E6CB263C3F8C006596D5 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA26E6CA263C3F8C006596D5 /* ViewController.swift */; };
 		EA26E6CD263C3F95006596D5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EA26E6CC263C3F95006596D5 /* Assets.xcassets */; };
 		EA26E6D0263C3F95006596D5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EA26E6CE263C3F95006596D5 /* Main.storyboard */; };
+		EAACB14C263DAE3400DEA1D2 /* MIDISynth.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAACB14B263DAE3400DEA1D2 /* MIDISynth.swift */; };
 		EAEB1E38263D6CE600524B81 /* StickyCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEB1E37263D6CE600524B81 /* StickyCollectionView.swift */; };
 		EAEB1E3A263D6D7900524B81 /* MIDI.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEB1E39263D6D7900524B81 /* MIDI.swift */; };
 		EAEB1E3C263D6FB700524B81 /* Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEB1E3B263D6FB700524B81 /* Keyboard.swift */; };
@@ -24,6 +25,7 @@
 		EA26E6CF263C3F95006596D5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		EA26E6D1263C3F95006596D5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EA26E6D2263C3F95006596D5 /* Resonance.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Resonance.entitlements; sourceTree = "<group>"; };
+		EAACB14B263DAE3400DEA1D2 /* MIDISynth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDISynth.swift; sourceTree = "<group>"; };
 		EAEB1E37263D6CE600524B81 /* StickyCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickyCollectionView.swift; sourceTree = "<group>"; };
 		EAEB1E39263D6D7900524B81 /* MIDI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDI.swift; sourceTree = "<group>"; };
 		EAEB1E3B263D6FB700524B81 /* Keyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keyboard.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				EAEB1E37263D6CE600524B81 /* StickyCollectionView.swift */,
 				EAEB1E3B263D6FB700524B81 /* Keyboard.swift */,
 				EAEB1E39263D6D7900524B81 /* MIDI.swift */,
+				EAACB14B263DAE3400DEA1D2 /* MIDISynth.swift */,
 				EA26E6CC263C3F95006596D5 /* Assets.xcassets */,
 				EA26E6CE263C3F95006596D5 /* Main.storyboard */,
 				EA26E6D1263C3F95006596D5 /* Info.plist */,
@@ -141,6 +144,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EAACB14C263DAE3400DEA1D2 /* MIDISynth.swift in Sources */,
 				EAEB1E3A263D6D7900524B81 /* MIDI.swift in Sources */,
 				EA26E6CB263C3F8C006596D5 /* ViewController.swift in Sources */,
 				EAEB1E3C263D6FB700524B81 /* Keyboard.swift in Sources */,

@@ -102,6 +102,7 @@ enum Event: Equatable, Hashable {
     case noteOff(channel: UInt8, key: Note, velocity: UInt8)
     case noteOn(channel: UInt8, key: Note, velocity: UInt8)
     case controlChange(channel: UInt8, message: ControllerMessage)
+    case programChange(channel: UInt8, program: UInt8)
     case unknown([UInt8])
 
     enum ControllerMessage: Equatable, Hashable {
@@ -153,6 +154,9 @@ enum Event: Equatable, Hashable {
         case (0b1011, let channel):
             guard data.count == 3 else { self = .unknown(data); return }
             self = .controlChange(channel: channel, message: ControllerMessage(control: data[1], value: data[2]))
+        case (0b1100, let channel):
+            guard data.count == 2 else { self = .unknown(data); return }
+            self = .programChange(channel: channel, program: data[1])
         default:
             self = .unknown(data)
         }
