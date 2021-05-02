@@ -1,11 +1,36 @@
+#if os(macOS)
 import Cocoa
-import Common
+public typealias View = NSView
+public typealias StackView = NSStackView
+public typealias Color = NSColor
+extension View {
+    var backgroundLayer: CALayer! {layer}
+}
+#elseif os(iOS)
+import UIKit
+public typealias View = UIView
+public typealias StackView = UIStackView
+public typealias Color = UIColor
+extension UIView {
+    var wantsLayer: Bool {
+        get {true}
+        set {}
+    }
+    var backgroundLayer: CALayer! {layer}
+}
+extension UIStackView {
+    var orientation: NSLayoutConstraint.Axis {
+        get {axis}
+        set {axis = newValue}
+    }
+}
+#endif
 
-final class Keyboard: NSView {
-    private let whiteKeysStackView = NSStackView()
-    private let blackKeysStackView = NSStackView()
-    private let keyViews: [NSView & KeyboardNoteViewType] // indices matches MIDI note number
-    var activeNotes: [ActiveNote] = [] {
+public final class Keyboard: View {
+    private let whiteKeysStackView = StackView()
+    private let blackKeysStackView = StackView()
+    private let keyViews: [View & KeyboardNoteViewType] // indices matches MIDI note number
+    public var activeNotes: [ActiveNote] = [] {
         didSet {
             keyViews.enumerated().forEach { index, kv in
                 if let note = (activeNotes.first {$0.note.rawValue == index + 21}) {
@@ -17,13 +42,19 @@ final class Keyboard: NSView {
         }
     }
 
-    struct ActiveNote {
-        var channel: UInt8
-        var note: Note
-        var velocity: UInt8
+    public struct ActiveNote {
+        public var channel: UInt8
+        public var note: Note
+        public var velocity: UInt8
+
+        public init(channel: UInt8, note: Note, velocity: UInt8) {
+            self.channel = channel
+            self.note = note
+            self.velocity = velocity
+        }
     }
 
-    init() {
+    public init() {
         self.keyViews = [
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
@@ -45,7 +76,11 @@ final class Keyboard: NSView {
         super.init(frame: .zero)
 
         wantsLayer = true
-        layer!.backgroundColor = NSColor.darkGray.cgColor
+        #if os(macOS)
+        layer!.backgroundColor = Color.darkGray.cgColor
+        #elseif os(iOS)
+        backgroundColor = Color.darkGray
+        #endif
 
         whiteKeysStackView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(whiteKeysStackView)
@@ -70,58 +105,54 @@ final class Keyboard: NSView {
         }
 
         blackKeysStackView.orientation = .horizontal
-        blackKeysStackView.distribution = .fillProportionally
+        blackKeysStackView.distribution = .fillProportionally // NSStackView can handle 2:3:4:1 but UIStackView cannot precisely handle them. a workaround is to use 200:300:400:100 and defaultLow compression resistances.
         blackKeysStackView.spacing = 0
         var blackKeyViewsPool = keyViews.compactMap {$0 as? BlackKeyView}
-        func blackKeyBlackPortion() -> NSView {
+        func blackKeyBlackPortion() -> View {
             blackKeyViewsPool.removeFirst()
         }
-        func oneBlackKeysSection() -> NSView {
-            let stackView = ProportionalStackView()
-            stackView.overriddenIntrinsicContentSize.width = 2
+        func oneBlackKeysSection() -> View {
+            let stackView = ProportionalStackView(intrinsicContentSizeWidth: 200)
             stackView.orientation = .horizontal
             stackView.distribution = .fillEqually
             stackView.spacing = 1
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             stackView.addArrangedSubview(blackKeyBlackPortion())
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             return stackView
         }
-        func twoBlackKeysSection() -> NSView {
-            let stackView = ProportionalStackView()
-            stackView.overriddenIntrinsicContentSize.width = 3
+        func twoBlackKeysSection() -> View {
+            let stackView = ProportionalStackView(intrinsicContentSizeWidth: 300)
             stackView.orientation = .horizontal
             stackView.distribution = .fillEqually
             stackView.spacing = 1
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             stackView.addArrangedSubview(blackKeyBlackPortion())
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             stackView.addArrangedSubview(blackKeyBlackPortion())
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             return stackView
         }
-        func threeBlackKeysSection() -> NSView {
-            let stackView = ProportionalStackView()
-            stackView.overriddenIntrinsicContentSize.width = 4
+        func threeBlackKeysSection() -> View {
+            let stackView = ProportionalStackView(intrinsicContentSizeWidth: 400)
             stackView.orientation = .horizontal
             stackView.distribution = .fillEqually
             stackView.spacing = 1
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             stackView.addArrangedSubview(blackKeyBlackPortion())
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             stackView.addArrangedSubview(blackKeyBlackPortion())
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             stackView.addArrangedSubview(blackKeyBlackPortion())
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             return stackView
         }
-        func noBlackKeysSection() -> NSView {
-            let stackView = ProportionalStackView()
-            stackView.overriddenIntrinsicContentSize.width = 1
+        func noBlackKeysSection() -> View {
+            let stackView = ProportionalStackView(intrinsicContentSizeWidth: 100)
             stackView.orientation = .horizontal
             stackView.distribution = .fillEqually
             stackView.spacing = 1
-            stackView.addArrangedSubview(NSView())
+            stackView.addArrangedSubview(View())
             return stackView
         }
 
@@ -133,14 +164,20 @@ final class Keyboard: NSView {
         blackKeysStackView.addArrangedSubview(noBlackKeysSection())
     }
 
-    final class ProportionalStackView: NSStackView {
-        var overriddenIntrinsicContentSize: NSSize = NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
-        override var intrinsicContentSize: NSSize {
+    final class ProportionalStackView: StackView {
+        init(intrinsicContentSizeWidth: CGFloat) {
+            super.init(frame: .zero)
+            overriddenIntrinsicContentSize.width = intrinsicContentSizeWidth
+            setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        }
+        required init(coder: NSCoder) {fatalError()}
+        var overriddenIntrinsicContentSize: CGSize = CGSize(width: View.noIntrinsicMetric, height: View.noIntrinsicMetric)
+        override var intrinsicContentSize: CGSize {
             overriddenIntrinsicContentSize
         }
     }
 
-    private func keyView(for note: Note) -> NSView? {
+    private func keyView(for note: Note) -> View? {
         note.rawValue < keyViews.count ? keyViews[Int(note.rawValue)] : nil
     }
 
@@ -148,13 +185,24 @@ final class Keyboard: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    final class WhiteKeyView: NSView, KeyboardNoteViewType {
-        let backgroundColor = NSColor.white
-        let highlightColor = NSColor.systemGreen
+    final class WhiteKeyView: View, KeyboardNoteViewType {
+        static let backgroundColor = Color.white
+        static let highlightColor = Color.systemGreen
+
+        private let highlightView = View()
 
         init() {
             super.init(frame: .zero)
             wantsLayer = true
+            highlightView.wantsLayer = true
+            backgroundLayer.backgroundColor = Self.backgroundColor.cgColor
+            highlightView.backgroundLayer.backgroundColor = Self.highlightColor.cgColor
+            addSubview(highlightView)
+            highlightView.translatesAutoresizingMaskIntoConstraints = false
+            highlightView.leftAnchor.constraint(equalTo: leftAnchor).isActive = true
+            highlightView.rightAnchor.constraint(equalTo: rightAnchor).isActive = true
+            highlightView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+            highlightView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
             reset()
         }
         required init?(coder: NSCoder) {
@@ -162,23 +210,34 @@ final class Keyboard: NSView {
         }
 
         func reset() {
-            layer!.backgroundColor = backgroundColor.cgColor
-            layer!.borderWidth = 0
+            highlightView.backgroundLayer.opacity = 0
+            backgroundLayer.borderWidth = 0
         }
         func highlightNote(channel: UInt8, velocity: UInt8) {
-            layer!.borderColor = highlightColor.cgColor
-            layer!.backgroundColor = backgroundColor.blended(withFraction: CGFloat(velocity) / 127, of: highlightColor)?.cgColor
-            layer!.borderWidth = 2
+            highlightView.backgroundLayer.opacity = Float(velocity) / 127
+            backgroundLayer.borderColor = Self.highlightColor.cgColor
+            backgroundLayer.borderWidth = 2
         }
     }
 
-    final class BlackKeyView: NSView, KeyboardNoteViewType {
-        let backgroundColor = NSColor.init(white: 0.1, alpha: 1)
-        let highlightColor = NSColor.systemGreen
+    final class BlackKeyView: View, KeyboardNoteViewType {
+        static let backgroundColor = Color.init(white: 0.1, alpha: 1)
+        static let highlightColor = Color.systemGreen
+
+        private let highlightView = View()
 
         init() {
             super.init(frame: .zero)
             wantsLayer = true
+            highlightView.wantsLayer = true
+            backgroundLayer.backgroundColor = Self.backgroundColor.cgColor
+            highlightView.backgroundLayer.backgroundColor = Self.highlightColor.cgColor
+            addSubview(highlightView)
+            highlightView.translatesAutoresizingMaskIntoConstraints = false
+            highlightView.leftAnchor.constraint(equalTo: leftAnchor).isActive = true
+            highlightView.rightAnchor.constraint(equalTo: rightAnchor).isActive = true
+            highlightView.topAnchor.constraint(equalTo: topAnchor).isActive = true
+            highlightView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
             reset()
         }
         required init?(coder: NSCoder) {
@@ -186,13 +245,13 @@ final class Keyboard: NSView {
         }
 
         func reset() {
-            layer!.backgroundColor = backgroundColor.cgColor
-            layer!.borderWidth = 0
+            highlightView.backgroundLayer.opacity = 0
+            backgroundLayer.borderWidth = 0
         }
         func highlightNote(channel: UInt8, velocity: UInt8) {
-            layer!.borderColor = highlightColor.cgColor
-            layer!.backgroundColor = backgroundColor.blended(withFraction: CGFloat(velocity) / 127, of: highlightColor)?.cgColor
-            layer!.borderWidth = 2
+            highlightView.backgroundLayer.opacity = Float(velocity) / 127
+            backgroundLayer.borderColor = Self.highlightColor.cgColor
+            backgroundLayer.borderWidth = 2
         }
     }
 }

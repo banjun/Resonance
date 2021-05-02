@@ -19,12 +19,12 @@
 		EA405B4F263EE1FC00D5CC78 /* Common.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EA405B3F263EE04100D5CC78 /* Common.framework */; };
 		EA405B50263EE1FC00D5CC78 /* Common.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = EA405B3F263EE04100D5CC78 /* Common.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		EA405B5E263EFBD900D5CC78 /* SystemResource in Resources */ = {isa = PBXBuildFile; fileRef = EA405B5D263EFBD900D5CC78 /* SystemResource */; };
+		EA405B5F263EFE3500D5CC78 /* Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEB1E3B263D6FB700524B81 /* Keyboard.swift */; };
 		EAACB154263EDD1600DEA1D2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAACB153263EDD1600DEA1D2 /* AppDelegate.swift */; };
 		EAACB158263EDD1600DEA1D2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAACB157263EDD1600DEA1D2 /* ViewController.swift */; };
 		EAACB15D263EDD1700DEA1D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EAACB15C263EDD1700DEA1D2 /* Assets.xcassets */; };
 		EAACB160263EDD1700DEA1D2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EAACB15E263EDD1700DEA1D2 /* LaunchScreen.storyboard */; };
 		EAEB1E38263D6CE600524B81 /* StickyCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEB1E37263D6CE600524B81 /* StickyCollectionView.swift */; };
-		EAEB1E3C263D6FB700524B81 /* Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEB1E3B263D6FB700524B81 /* Keyboard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +82,7 @@
 		EA405B42263EE04100D5CC78 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EA405B54263EEA2700D5CC78 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		EA405B5D263EFBD900D5CC78 /* SystemResource */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SystemResource; sourceTree = "<group>"; };
+		EA405B60263EFE4400D5CC78 /* Resonance-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Resonance-ios.entitlements"; sourceTree = "<group>"; };
 		EAACB14B263DAE3400DEA1D2 /* MIDISynth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDISynth.swift; sourceTree = "<group>"; };
 		EAACB151263EDD1600DEA1D2 /* Resonance-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Resonance-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EAACB153263EDD1600DEA1D2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -148,7 +149,6 @@
 				EA26E6C8263C3F8C006596D5 /* AppDelegate.swift */,
 				EA26E6CA263C3F8C006596D5 /* ViewController.swift */,
 				EAEB1E37263D6CE600524B81 /* StickyCollectionView.swift */,
-				EAEB1E3B263D6FB700524B81 /* Keyboard.swift */,
 				EA26E6CC263C3F95006596D5 /* Assets.xcassets */,
 				EA26E6CE263C3F95006596D5 /* Main.storyboard */,
 				EA26E6D1263C3F95006596D5 /* Info.plist */,
@@ -162,6 +162,7 @@
 			children = (
 				EAEB1E39263D6D7900524B81 /* MIDI.swift */,
 				EAACB14B263DAE3400DEA1D2 /* MIDISynth.swift */,
+				EAEB1E3B263D6FB700524B81 /* Keyboard.swift */,
 				EA405B41263EE04100D5CC78 /* Common.h */,
 				EA405B42263EE04100D5CC78 /* Info.plist */,
 			);
@@ -179,6 +180,7 @@
 		EAACB152263EDD1600DEA1D2 /* Resonance-ios */ = {
 			isa = PBXGroup;
 			children = (
+				EA405B60263EFE4400D5CC78 /* Resonance-ios.entitlements */,
 				EAACB153263EDD1600DEA1D2 /* AppDelegate.swift */,
 				EAACB157263EDD1600DEA1D2 /* ViewController.swift */,
 				EA405B5D263EFBD900D5CC78 /* SystemResource */,
@@ -334,7 +336,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				EA26E6CB263C3F8C006596D5 /* ViewController.swift in Sources */,
-				EAEB1E3C263D6FB700524B81 /* Keyboard.swift in Sources */,
 				EA26E6C9263C3F8C006596D5 /* AppDelegate.swift in Sources */,
 				EAEB1E38263D6CE600524B81 /* StickyCollectionView.swift in Sources */,
 			);
@@ -345,6 +346,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EA405B4C263EE05000D5CC78 /* MIDI.swift in Sources */,
+				EA405B5F263EFE3500D5CC78 /* Keyboard.swift in Sources */,
 				EA405B4D263EE05000D5CC78 /* MIDISynth.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -629,6 +631,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Resonance-ios/Resonance-ios.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = FPZK4WRGW7;
 				INFOPLIST_FILE = "Resonance-ios/Info.plist";
@@ -641,8 +644,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Debug;
 		};
@@ -651,6 +655,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Resonance-ios/Resonance-ios.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = FPZK4WRGW7;
 				INFOPLIST_FILE = "Resonance-ios/Info.plist";
@@ -663,8 +668,9 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
