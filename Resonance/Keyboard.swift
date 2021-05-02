@@ -1,4 +1,5 @@
 import Cocoa
+import Common
 
 final class Keyboard: NSView {
     private let whiteKeysStackView = NSStackView()

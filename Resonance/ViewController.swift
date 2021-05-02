@@ -1,5 +1,6 @@
 import Cocoa
 import Combine
+import Common
 
 class ViewController: NSViewController, NSToolbarDelegate {
     private var client: Client?
@@ -57,7 +58,8 @@ class ViewController: NSViewController, NSToolbarDelegate {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        self.client = Source.all().first.flatMap {Client(source: $0)}
+        let sources = Source.all()
+        self.client = sources.first.flatMap {Client(source: $0)}
         self.client?.packets.receive(on: DispatchQueue.main).sink { [unowned self] packet in
             packets.append(packet)
 
@@ -76,7 +78,9 @@ class ViewController: NSViewController, NSToolbarDelegate {
             midiSynth.play(event: packet.data)
         }.store(in: &cancellables)
         NSLog("client.source = \(String(describing: self.client?.source))")
-
+        let title = (client?.source.displayName ?? "No MIDI Source") + " (\(sources.count) sources total)"
+        self.title = title
+        view.window?.title = title
 
         let toolbar = NSToolbar()
         toolbar.delegate = self

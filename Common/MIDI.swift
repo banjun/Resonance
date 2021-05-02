@@ -2,14 +2,14 @@ import Foundation
 import CoreMIDI
 import Combine
 
-final class Client {
-    let source: Source
-    let midiClientRef: MIDIClientRef
-    let inputPortRef: MIDIPortRef
+public final class Client {
+    public let source: Source
+    public let midiClientRef: MIDIClientRef
+    public let inputPortRef: MIDIPortRef
 
-    let packets: PassthroughSubject<Packet, Never>
+    public let packets: PassthroughSubject<Packet, Never>
 
-    init?(source: Source) {
+    public init?(source: Source) {
         self.source = source
         self.packets = .init()
         let packets = self.packets
@@ -17,7 +17,7 @@ final class Client {
         var midiClientRef: MIDIClientRef = 0
         var status: OSStatus = noErr
         status = MIDIClientCreateWithBlock((source.name ?? "no name") as CFString, &midiClientRef) { notification in
-            NSLog("notification = \(notification)")
+            NSLog("notification = \(notification.pointee)")
         }
         guard status == noErr else { return nil }
         self.midiClientRef = midiClientRef
@@ -38,22 +38,24 @@ final class Client {
     }
 }
 
-struct Source {
-    static func all() -> [Source] {
-        (0..<MIDIGetNumberOfSources()).map {Source(MIDIGetSource($0))}
+public struct Source {
+    public static func all() -> [Source] {
+        (0..<MIDIGetNumberOfSources()).map {Source(MIDIGetSource($0))}.sorted { a, b in
+            (a.model ?? "") < (b.model ?? "")
+        }.reversed()
     }
 
-    var endpointRef: MIDIEndpointRef
+    public var endpointRef: MIDIEndpointRef
 
-    var name: String?
-    var displayName: String?
-    var manufacturer: String?
-    var model: String?
-    var receiveChannels: Int32?
-    var transmitChannels: Int32?
-    var image: Data?
+    public var name: String?
+    public var displayName: String?
+    public var manufacturer: String?
+    public var model: String?
+    public var receiveChannels: Int32?
+    public var transmitChannels: Int32?
+    public var image: Data?
 
-    init(_ endpointRef: MIDIEndpointRef) {
+    public init(_ endpointRef: MIDIEndpointRef) {
         self.endpointRef = endpointRef
 
         func property(_ key: CFString) -> String? {
@@ -84,11 +86,11 @@ struct Source {
     }
 }
 
-struct Packet: Equatable, Hashable {
-    var timeStamp: MIDITimeStamp
-    var data: Event
+public struct Packet: Equatable, Hashable {
+    public var timeStamp: MIDITimeStamp
+    public var data: Event
 
-    init(_ midiPacket: MIDIPacket) {
+    public init(_ midiPacket: MIDIPacket) {
         self.timeStamp = midiPacket.timeStamp
 
         var midiPacket = midiPacket
@@ -98,14 +100,14 @@ struct Packet: Equatable, Hashable {
     }
 }
 
-enum Event: Equatable, Hashable {
+public enum Event: Equatable, Hashable {
     case noteOff(channel: UInt8, key: Note, velocity: UInt8)
     case noteOn(channel: UInt8, key: Note, velocity: UInt8)
     case controlChange(channel: UInt8, message: ControllerMessage)
     case programChange(channel: UInt8, program: UInt8)
     case unknown([UInt8])
 
-    enum ControllerMessage: Equatable, Hashable {
+    public enum ControllerMessage: Equatable, Hashable {
         case damperPedalOnOff(value: UInt8)
         case portamentoOnOff(value: UInt8)
         case sustenutoOnOff(value: UInt8)
@@ -138,7 +140,7 @@ enum Event: Equatable, Hashable {
         }
     }
 
-    init(_ data: [UInt8]) {
+    public init(_ data: [UInt8]) {
         guard let first = data.first else {
             self = .unknown(data)
             return
@@ -163,24 +165,27 @@ enum Event: Equatable, Hashable {
     }
 }
 
-struct Note: RawRepresentable, CustomStringConvertible, Equatable, Hashable {
-    var rawValue: UInt8
+public struct Note: RawRepresentable, CustomStringConvertible, Equatable, Hashable {
+    public var rawValue: UInt8
+    public init(rawValue: UInt8) {
+        self.rawValue = rawValue
+    }
 
-    var octave: Int {
+    public var octave: Int {
         Int(rawValue / 12) - 1
     }
 
-    var labelInSharps: String {
+    public var labelInSharps: String {
         let labels = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
         return labels[Int(rawValue) % labels.count]
     }
 
-    var labelInFlats: String {
+    public var labelInFlats: String {
         let labels = ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"]
         return labels[Int(rawValue) % labels.count]
     }
 
-    var description: String {
+    public var description: String {
        labelInSharps + String(octave)
     }
 }
