@@ -2,26 +2,16 @@ import Cocoa
 import Combine
 import Common
 
-class ViewController: NSViewController, NSToolbarDelegate {
+class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataSource {
     private var client: Client?
     private var cancellables = Set<AnyCancellable>()
     private let eventsView = StickyCollectionView()
-    private lazy var packetsDataSource = NSCollectionViewDiffableDataSource<String, Packet>.init(collectionView: eventsView.collectionView) { eventsView, IndexPath, packet in
-        let item = NSCollectionViewItem()
-        let label = NSTextField(labelWithString: String(describing: packet))
-        label.font = .monospacedSystemFont(ofSize: label.font!.pointSize, weight: .regular)
-        item.view = label
-        return item
-    }
     private let keyboard = Keyboard()
 
     private var packets: [Packet] = [] {
         didSet {
-            let packets = packets
-            var snapshot = NSDiffableDataSourceSnapshot<String, Packet>()
-            snapshot.appendSections(["Event"])
-            snapshot.appendItems(packets)
-            packetsDataSource.apply(snapshot, animatingDifferences: true)
+            let updatedIdexPaths = (oldValue.count..<packets.count).map {IndexPath(item: $0, section: 0)}
+            eventsView.collectionView.insertItems(at: Set(updatedIdexPaths))
             eventsView.scrollToStickyPosition()
         }
     }
@@ -35,6 +25,7 @@ class ViewController: NSViewController, NSToolbarDelegate {
     private let midiSynth = MIDISynth()
 
     override func viewDidLoad() {
+        eventsView.collectionView.dataSource = self
         eventsView.collectionView.collectionViewLayout = EventsLayout()
 
         eventsView.translatesAutoresizingMaskIntoConstraints = false
@@ -58,11 +49,10 @@ class ViewController: NSViewController, NSToolbarDelegate {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+
         let sources = Source.all()
         self.client = sources.first.flatMap {Client(source: $0)}
         self.client?.packets.receive(on: DispatchQueue.main).sink { [unowned self] packet in
-            packets.append(packet)
-
             switch packet.data {
             case .controlChange(channel: let channel, message: .allNotesOff):
                 activeNotes = activeNotes.filter {!($0.channel == channel)}
@@ -74,19 +64,34 @@ class ViewController: NSViewController, NSToolbarDelegate {
             default:
                 break
             }
-
+            
             midiSynth.play(event: packet.data)
+        }.store(in: &cancellables)
+        self.client?.packets.collect(.byTime(DispatchQueue.main, 0.1)).sink { [unowned self] in
+            packets.append(contentsOf: $0)
         }.store(in: &cancellables)
         NSLog("client.source = \(String(describing: self.client?.source))")
         let title = (client?.source.displayName ?? "No MIDI Source") + " (\(sources.count) sources total)"
         self.title = title
         view.window?.title = title
-
+        
         let toolbar = NSToolbar()
         toolbar.delegate = self
         toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier.flexibleSpace, at: 0)
         toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier(rawValue: "MIDISynth"), at: 1)
         view.window?.toolbar = toolbar
+    }
+
+    func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {
+        packets.count
+    }
+    func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
+        let packet = packets[indexPath.item]
+        let item = NSCollectionViewItem()
+        let label = NSTextField(labelWithString: String(describing: packet))
+        label.font = .monospacedSystemFont(ofSize: label.font!.pointSize, weight: .regular)
+        item.view = label
+        return item
     }
 
     let midiSynthToolbarItem = NSToolbarItem(itemIdentifier: .midiSynth)
@@ -149,6 +154,6 @@ final class EventsLayout: NSCollectionViewLayout {
     }
 
     override func shouldInvalidateLayout(forBoundsChange newBounds: NSRect) -> Bool {
-        true
+        collectionViewContentSize != newBounds.size
     }
 }
