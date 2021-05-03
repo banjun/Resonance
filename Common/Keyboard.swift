@@ -216,7 +216,7 @@ public final class Keyboard: View {
         func highlightNote(channel: UInt8, velocity: UInt8) {
             highlightView.backgroundLayer.opacity = Float(velocity) / 127
             backgroundLayer.borderColor = Self.highlightColor.cgColor
-            backgroundLayer.borderWidth = 2
+            backgroundLayer.borderWidth = velocity > 0 ? 2 : 0
         }
     }
 
@@ -251,7 +251,7 @@ public final class Keyboard: View {
         func highlightNote(channel: UInt8, velocity: UInt8) {
             highlightView.backgroundLayer.opacity = Float(velocity) / 127
             backgroundLayer.borderColor = Self.highlightColor.cgColor
-            backgroundLayer.borderWidth = 2
+            backgroundLayer.borderWidth = velocity > 0 ? 2 : 0
         }
     }
 }
