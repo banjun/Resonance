@@ -3,7 +3,26 @@ import Combine
 import Common
 
 class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataSource {
-    private var client: Client?
+    private var midiInputSources: [Source] = [] {
+        didSet {
+            NSLog("midiInputSources = \(midiInputSources)")
+            midiInputPopUp.removeAllItems()
+            midiInputPopUp.addItems(withTitles: midiInputSources.map {$0.displayName ?? $0.name ?? $0.model ?? $0.manufacturer ?? "(null)"})
+        }
+    }
+    private var midiOutputDestinations: [Destination] = [] {
+        didSet {
+            NSLog("midiOutputDestinations = \(midiOutputDestinations)")
+            midiOutputPopUp.removeAllItems()
+            midiOutputPopUp.addItem(withTitle: "No Output")
+            midiOutputPopUp.addItems(withTitles: midiOutputDestinations.map {$0.displayName ?? $0.name ?? $0.model ?? $0.manufacturer ?? "(null)"})
+        }
+    }
+    private var client: Client? {
+        didSet {
+            updateClient()
+        }
+    }
     private var cancellables = Set<AnyCancellable>()
     private let eventsView = StickyCollectionView()
     private let keyboard = Keyboard()
@@ -72,8 +91,24 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         super.viewDidAppear()
 
         let sources = Source.all()
+        self.midiInputSources = sources
+        self.midiOutputDestinations = Destination.all()
         self.client = sources.first.flatMap {Client(source: $0)}
-        self.client?.packets.receive(on: DispatchQueue.main).sink { [unowned self] packet in
+        
+        let toolbar = NSToolbar(identifier: "ViewController")
+        toolbar.delegate = self
+        toolbar.allowsUserCustomization = true
+        view.window?.toolbar = toolbar
+    }
+
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        updateKeyboardScale()
+    }
+
+    private func updateClient() {
+        cancellables.removeAll()
+        client?.packets.receive(on: DispatchQueue.main).sink { [unowned self] packet in
             switch packet.data {
             case .controlChange(channel: let channel, message: .allNotesOff):
                 activeNotes = activeNotes.filter {!($0.channel == channel)}
@@ -85,27 +120,16 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
             default:
                 break
             }
-            
+
             midiSynth.play(event: packet.data)
         }.store(in: &cancellables)
-        self.client?.packets.collect(.byTime(DispatchQueue.main, 0.1)).sink { [unowned self] in
+        client?.packets.collect(.byTime(DispatchQueue.main, 0.1)).sink { [unowned self] in
             packets.append(contentsOf: $0)
         }.store(in: &cancellables)
-        NSLog("client.source = \(String(describing: self.client?.source))")
-        let title = (client?.source.displayName ?? "No MIDI Source") + " (\(sources.count) sources total)"
+        NSLog("client.source = \(String(describing: client?.source))")
+        let title = (client?.source.displayName ?? "No MIDI Source")
         self.title = title
         view.window?.title = title
-        
-        let toolbar = NSToolbar()
-        toolbar.delegate = self
-        toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier.flexibleSpace, at: 0)
-        toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier(rawValue: "MIDISynth"), at: 1)
-        view.window?.toolbar = toolbar
-    }
-
-    override func viewDidLayout() {
-        super.viewDidLayout()
-        updateKeyboardScale()
     }
 
     private func updateKeyboardScale() {
@@ -129,10 +153,24 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         return item
     }
 
-    let midiSynthToolbarItem = NSToolbarItem(itemIdentifier: .midiSynth)
+    private let midiInputToolbarItem = NSToolbarItem(itemIdentifier: .midiInput)
+    private let midiInputPopUp = NSPopUpButton(title: "", target: self, action: #selector(ViewController.midiInputDidSelect))
+    private let midiOutputToolbarItem = NSToolbarItem(itemIdentifier: .midiOutput)
+    private let midiOutputPopUp = NSPopUpButton(title: "", target: self, action: #selector(ViewController.midiOutputDidSelect))
+    private let midiSynthToolbarItem = NSToolbarItem(itemIdentifier: .midiSynth)
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         switch itemIdentifier {
+        case .midiInput:
+            midiInputToolbarItem.label = "MIDI Input"
+            midiInputToolbarItem.target = nil
+            midiInputToolbarItem.view = midiInputPopUp
+            return midiInputToolbarItem
+        case .midiOutput:
+            midiOutputToolbarItem.label = "MIDI Output"
+            midiOutputToolbarItem.target = nil
+            midiOutputToolbarItem.view = midiOutputPopUp
+            return midiOutputToolbarItem
         case .midiSynth:
             midiSynthToolbarItem.image = NSImage(named: NSImage.slideshowTemplateName)
             midiSynthToolbarItem.label = midiSynth.name + " Muted"
@@ -144,8 +182,31 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         }
     }
     
-    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiSynth] }
-    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiSynth] }
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiInput, .midiOutput, .space, .flexibleSpace, .midiSynth] }
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiInput, .midiOutput, .space, .midiSynth] }
+
+    @objc private func midiInputDidSelect() {
+        let index = midiInputPopUp.indexOfSelectedItem
+        guard index < midiInputSources.count,
+              let client = Client(source: midiInputSources[index]) else {
+            midiInputPopUp.selectItem(at: -1)
+            return
+        }
+        self.client = client
+
+        let destinationIndex = midiOutputPopUp.indexOfSelectedItem - 1
+        guard case 0..<midiOutputDestinations.count = destinationIndex else { return }
+        client.thruDestination = midiOutputDestinations[destinationIndex]
+    }
+
+    @objc private func midiOutputDidSelect() {
+        let index = midiOutputPopUp.indexOfSelectedItem - 1
+        guard case 0..<midiOutputDestinations.count = index else {
+            midiOutputPopUp.selectItem(at: 0)
+            return
+        }
+        client?.thruDestination = midiOutputDestinations[index]
+    }
 
     @objc private func toggleMIDISynth() {
         midiSynth.isEnabled.toggle()
@@ -155,6 +216,8 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
 
 private extension NSToolbarItem.Identifier {
     static let midiSynth: NSToolbarItem.Identifier = .init("MIDISynth")
+    static let midiInput: NSToolbarItem.Identifier = .init("MIDIInput")
+    static let midiOutput: NSToolbarItem.Identifier = .init("MIDIOutput")
 }
 
 final class EventsLayout: NSCollectionViewLayout {

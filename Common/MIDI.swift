@@ -5,7 +5,23 @@ import Combine
 public final class Client {
     public let source: Source
     public let midiClientRef: MIDIClientRef
-    public let inputPortRef: MIDIPortRef
+    public var thruDestination: Destination? {
+        didSet {
+            thruOutputPortRef = {
+                var outputPort: MIDIPortRef = 0
+                let status = MIDIOutputPortCreate(midiClientRef, "Output" as CFString, &outputPort)
+                guard status == noErr else { return nil }
+                return outputPort
+            }()
+        }
+    }
+    public var thruOutputPortRef: MIDIPortRef? {
+        didSet {
+            if let oldValue = oldValue {
+                MIDIPortDispose(oldValue)
+            }
+        }
+    }
 
     public let packets: PassthroughSubject<Packet, Never>
 
@@ -34,7 +50,12 @@ public final class Client {
         self.midiClientRef = midiClientRef
 
         var inputPortRef: MIDIPortRef = 0
-        status = MIDIInputPortCreateWithBlock(midiClientRef, "Input" as CFString, &inputPortRef) { pktlist, srcConnRefCon in
+        status = MIDIInputPortCreateWithBlock(midiClientRef, "Input" as CFString, &inputPortRef) { [weak self] pktlist, srcConnRefCon in
+            if let thruDestination = self?.thruDestination, let thruOutputPortRef = self?.thruOutputPortRef {
+                // manually send to output as we cannot tell whether MIDIThru... API works or not
+                MIDISend(thruOutputPortRef, thruDestination.endpointRef, pktlist)
+            }
+
             var packet = pktlist.pointee.packet
             packets.send(Packet(packet))
             (1..<pktlist.pointee.numPackets).forEach { _ in
@@ -43,7 +64,6 @@ public final class Client {
             }
         }
         guard status == noErr else { return nil }
-        self.inputPortRef = inputPortRef
 
         status = MIDIPortConnectSource(inputPortRef, source.endpointRef, nil)
         guard status == noErr else { return nil }
@@ -137,6 +157,58 @@ public struct Source {
         self.transmitChannels = property(kMIDIPropertyTransmitChannels)
         self.image = property(kMIDIPropertyImage)
         self.offline = property(kMIDIPropertyOffline)
+        self.driverOwner = property(kMIDIPropertyDriverOwner)
+    }
+}
+
+public struct Destination {
+    public static func all() -> [Destination] {
+        (0..<MIDIGetNumberOfDestinations()).map {Destination(MIDIGetDestination($0))}
+    }
+
+    public var endpointRef: MIDIEndpointRef
+
+    public var name: String?
+    public var displayName: String?
+    public var manufacturer: String?
+    public var model: String?
+    public var receiveChannels: Int32?
+    public var transmitChannels: Int32?
+    public var image: Data?
+    public var offline: Int32?
+    public var canRoute: String?
+    public var driverOwner: String?
+
+    public init(_ endpointRef: MIDIEndpointRef) {
+        self.endpointRef = endpointRef
+
+        func property(_ key: CFString) -> String? {
+            var value: Unmanaged<CFString>?
+            let status = MIDIObjectGetStringProperty(endpointRef, key, &value)
+            return status == noErr ? value?.takeRetainedValue() as String? : nil
+        }
+
+        func property(_ key: CFString) -> Int32? {
+            var value: Int32 = 0
+            let status = MIDIObjectGetIntegerProperty(endpointRef, key, &value)
+            return status == noErr ? value : nil
+        }
+
+        func property(_ key: CFString) -> Data? {
+            var value: Unmanaged<CFData>?
+            let status = MIDIObjectGetDataProperty(endpointRef, key, &value)
+            return status == noErr ? value?.takeRetainedValue() as Data? : nil
+        }
+
+        self.name = property(kMIDIPropertyName)
+        self.displayName = property(kMIDIPropertyDisplayName)
+        self.manufacturer = property(kMIDIPropertyManufacturer)
+        self.model = property(kMIDIPropertyModel)
+        self.receiveChannels = property(kMIDIPropertyReceiveChannels)
+        self.transmitChannels = property(kMIDIPropertyTransmitChannels)
+        self.image = property(kMIDIPropertyImage)
+        self.offline = property(kMIDIPropertyOffline)
+        self.canRoute = property(kMIDIPropertyCanRoute)
         self.driverOwner = property(kMIDIPropertyDriverOwner)
     }
 }
