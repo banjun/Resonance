@@ -11,6 +11,10 @@ final class ViewController: UIViewController {
     private lazy var midiSynthButton = UIBarButtonItem(title: "Synth", style: .plain, target: self, action: #selector(toggleMIDISynth))
 
     private let keyboard = Keyboard()
+    private lazy var keyboardWidthConstraint: NSLayoutConstraint = keyboard.widthAnchor.constraint(equalToConstant: 1024)
+    private var keyboardWidthScale: CGFloat = 1 {
+        didSet {updateKeyboardScale()}
+    }
     private var activeNotes: [Keyboard.ActiveNote] = [] {
         didSet {
             keyboard.activeNotes = activeNotes
@@ -32,12 +36,24 @@ final class ViewController: UIViewController {
         view.backgroundColor = .systemBackground
         navigationItem.rightBarButtonItem = midiSynthButton
 
-        view.addSubview(keyboard)
+        let keyboardScrollView = UIScrollView()
         keyboard.translatesAutoresizingMaskIntoConstraints = false
-        keyboard.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
-        keyboard.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
-        keyboard.topAnchor.constraint(equalTo: view.bottomAnchor, constant: -128).isActive = true
-        keyboard.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        keyboardScrollView.addSubview(keyboard)
+        keyboardScrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(keyboardScrollView)
+
+        keyboardScrollView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        keyboardScrollView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        keyboardScrollView.heightAnchor.constraint(equalToConstant: 256).isActive = true
+        keyboardScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        keyboard.leftAnchor.constraint(equalTo: keyboardScrollView.leftAnchor).isActive = true
+        keyboard.rightAnchor.constraint(equalTo: keyboardScrollView.rightAnchor).isActive = true
+        keyboard.topAnchor.constraint(equalTo: keyboardScrollView.frameLayoutGuide.topAnchor).isActive = true
+        keyboard.bottomAnchor.constraint(equalTo: keyboardScrollView.frameLayoutGuide.bottomAnchor).isActive = true
+        keyboardWidthConstraint.isActive = true
+
+        let keyboardScaleGesture = UIPinchGestureRecognizer(target: self, action: #selector(keyboardScaleGesture))
+        view.addGestureRecognizer(keyboardScaleGesture)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -64,8 +80,26 @@ final class ViewController: UIViewController {
         title = (client?.source.displayName ?? "No MIDI Source") + " (\(sources.count) sources total)"
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateKeyboardScale()
+    }
+
+    private func updateKeyboardScale() {
+        keyboardWidthConstraint.constant = view.bounds.width * keyboardWidthScale
+    }
+
     @objc private func toggleMIDISynth() {
         midiSynth.isEnabled.toggle()
         midiSynthButton.title = midiSynth.name + (midiSynth.isEnabled ? " Enabled" : " Muted")
+    }
+
+    private var keyboardScaleOnGestureBegin: CGFloat = 1
+    @objc func keyboardScaleGesture(_ gesture: UIPinchGestureRecognizer) {
+        switch gesture.state {
+        case .began: keyboardScaleOnGestureBegin = keyboardWidthScale
+        case .changed: keyboardWidthScale = min(max(1, keyboardScaleOnGestureBegin * gesture.scale), 5)
+        default: break
+        }
     }
 }
