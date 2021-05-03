@@ -52,9 +52,48 @@ public final class Client {
 
 public struct Source {
     public static func all() -> [Source] {
-        (0..<MIDIGetNumberOfSources()).map {Source(MIDIGetSource($0))}.sorted { a, b in
-            (a.model ?? "") < (b.model ?? "")
-        }.reversed()
+        let numberOfSources = MIDIGetNumberOfSources()
+        if numberOfSources > 0 {
+            // normal case
+            return (0..<numberOfSources).map {Source(MIDIGetSource($0))}.sorted { a, b in
+                (a.model ?? "") < (b.model ?? "")
+            }.reversed()
+        }
+        // some devices incorrectly report MIDIGetNumberOfSources as zero. it may be different from enumerating sources from devices
+        // confirmed on iPad Pro (12.9-inch) (3rd generation) iPadOS 13.4 (17E255)
+        // maybe this is caused by unwanted system global status and thus also can be comfirmed by just using GarageBand.
+        // the global state can be fixed by stimulating from an app. code below:
+        ////// chop
+        // MIDINetworkSession.default().isEnabled = true
+        // MIDINetworkSession.default().connectionPolicy = .anyone
+        // MIDINetworkSession.default().addConnection(MIDINetworkConnection(host: MIDINetworkHost(name: "iPad", address: "localhost", port: 18888)))
+        //////  end of chop
+
+        // code for debug log
+        NSLog("MIDIGetNumberOfSources() reports zero. we should enumerate devices...")
+        let numberOfDevices = MIDIGetNumberOfDevices()
+        NSLog("numberOfDevices = \(numberOfDevices)")
+        return (0..<numberOfDevices).flatMap { i -> [Source] in
+            let device = MIDIGetDevice(i)
+            var name: Unmanaged<CFString>?
+            MIDIObjectGetStringProperty(device, kMIDIPropertyName, &name)
+            NSLog("device[\(i)] = \(device), name = \(String(describing: name?.takeRetainedValue()))")
+            let numberOfEntities = MIDIDeviceGetNumberOfEntities(device)
+            NSLog("\tnumberOfEntities = \(numberOfEntities)")
+            return (0..<numberOfEntities).flatMap { i -> [Source] in
+                let entity = MIDIDeviceGetEntity(device,i)
+                var name: Unmanaged<CFString>?
+                MIDIObjectGetStringProperty(entity, kMIDIPropertyName, &name)
+                NSLog("\tentity[\(i)] = \(entity), name = \(String(describing: name?.takeRetainedValue()))")
+                let numberOfSources = MIDIEntityGetNumberOfSources(entity)
+                NSLog("\t\tnumberOfSources = \(numberOfSources)")
+                return (0..<numberOfSources).map { i -> Source in
+                    let source = Source(MIDIEntityGetSource(entity, i))
+                    NSLog("\t\tsource[\(i)] = \(source)")
+                    return source
+                }
+            }
+        }
     }
 
     public var endpointRef: MIDIEndpointRef
@@ -66,6 +105,8 @@ public struct Source {
     public var receiveChannels: Int32?
     public var transmitChannels: Int32?
     public var image: Data?
+    public var offline: Int32?
+    public var driverOwner: String?
 
     public init(_ endpointRef: MIDIEndpointRef) {
         self.endpointRef = endpointRef
@@ -95,6 +136,8 @@ public struct Source {
         self.receiveChannels = property(kMIDIPropertyReceiveChannels)
         self.transmitChannels = property(kMIDIPropertyTransmitChannels)
         self.image = property(kMIDIPropertyImage)
+        self.offline = property(kMIDIPropertyOffline)
+        self.driverOwner = property(kMIDIPropertyDriverOwner)
     }
 }
 
