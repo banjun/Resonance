@@ -43,6 +43,7 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
 
         let keyboardScrollView = NSScrollView()
         keyboardScrollView.documentView = keyboard
+        keyboardScrollView.verticalScrollElasticity = .none
         keyboardScrollView.translatesAutoresizingMaskIntoConstraints = false
         keyboard.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(keyboardScrollView)

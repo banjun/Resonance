@@ -206,7 +206,11 @@ public final class Keyboard: View {
             if let label = label {
                 let labelView: View
                 #if os(macOS)
-                labelView = NSTextField(labelWithAttributedString: .init(string: label, attributes: [.foregroundColor: Color.lightGray]))
+                labelView = NSTextField(labelWithAttributedString: .init(string: label, attributes: [.font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular), .foregroundColor: Color.lightGray, .paragraphStyle: {
+                    let p = NSMutableParagraphStyle()
+                    p.alignment = .center
+                    return p
+                }()]))
                 #elseif os(iOS)
                 labelView = {
                     let l = UILabel()
