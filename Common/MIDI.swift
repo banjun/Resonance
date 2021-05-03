@@ -17,7 +17,18 @@ public final class Client {
         var midiClientRef: MIDIClientRef = 0
         var status: OSStatus = noErr
         status = MIDIClientCreateWithBlock((source.name ?? "no name") as CFString, &midiClientRef) { notification in
-            NSLog("notification = \(notification.pointee)")
+            let notification = notification.pointee
+            NSLog("notification = \(notification)")
+            switch notification.messageID {
+            case .msgSetupChanged: NSLog("msgSetupChanged: size = \(notification.messageSize)")
+            case .msgObjectAdded: NSLog("msgObjectAdded: size = \(notification.messageSize)")
+            case .msgObjectRemoved: NSLog("msgObjectRemoved: size = \(notification.messageSize)")
+            case .msgPropertyChanged: NSLog("msgPropertyChanged: size = \(notification.messageSize)")
+            case .msgThruConnectionsChanged: NSLog("msgThruConnectionsChanged: size = \(notification.messageSize)")
+            case .msgSerialPortOwnerChanged: NSLog("msgSerialPortOwnerChanged: size = \(notification.messageSize)")
+            case .msgIOError: NSLog("msgIOError: size = \(notification.messageSize)")
+            @unknown default: NSLog("@unknown default: size = \(notification.messageSize)")
+            }
         }
         guard status == noErr else { return nil }
         self.midiClientRef = midiClientRef
