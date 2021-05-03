@@ -25,9 +25,10 @@ public final class Client {
         var inputPortRef: MIDIPortRef = 0
         status = MIDIInputPortCreateWithBlock(midiClientRef, "Input" as CFString, &inputPortRef) { pktlist, srcConnRefCon in
             var packet = pktlist.pointee.packet
-            (0..<pktlist.pointee.numPackets).forEach { _ in
-                packets.send(Packet(packet))
+            packets.send(Packet(packet))
+            (1..<pktlist.pointee.numPackets).forEach { _ in
                 packet = MIDIPacketNext(&packet).pointee
+                packets.send(Packet(packet))
             }
         }
         guard status == noErr else { return nil }
