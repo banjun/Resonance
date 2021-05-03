@@ -7,6 +7,10 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
     private var cancellables = Set<AnyCancellable>()
     private let eventsView = StickyCollectionView()
     private let keyboard = Keyboard()
+    private lazy var keyboardWidthConstraint: NSLayoutConstraint = keyboard.widthAnchor.constraint(equalToConstant: 1024)
+    private var keyboardWidthScale: CGFloat = 1 {
+        didSet {updateKeyboardScale()}
+    }
 
     private var packets: [Packet] = [] {
         didSet {
@@ -29,22 +33,38 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         eventsView.collectionView.collectionViewLayout = EventsLayout()
 
         eventsView.translatesAutoresizingMaskIntoConstraints = false
-        keyboard.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(eventsView)
-        view.addSubview(keyboard)
+
+        let keyboardScaleSlider = NSSlider(value: 1, minValue: 1, maxValue: 5, target: self, action: #selector(keyboardScaleSliderValueChanged(_:)))
+        keyboardScaleSlider.numberOfTickMarks = 5
+        keyboardScaleSlider.isContinuous = true
+        keyboardScaleSlider.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(keyboardScaleSlider)
+
+        let keyboardScrollView = NSScrollView()
+        keyboardScrollView.documentView = keyboard
+        keyboardScrollView.translatesAutoresizingMaskIntoConstraints = false
+        keyboard.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(keyboardScrollView)
 
         eventsView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         eventsView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         eventsView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        eventsView.bottomAnchor.constraint(equalTo: keyboard.topAnchor).isActive = true
+        eventsView.bottomAnchor.constraint(equalTo: keyboardScaleSlider.topAnchor, constant: -4).isActive = true
         eventsView.widthAnchor.constraint(greaterThanOrEqualToConstant: 256).isActive = true
         eventsView.heightAnchor.constraint(greaterThanOrEqualToConstant: 256).isActive = true
 
-        keyboard.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
-        keyboard.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
-        keyboard.topAnchor.constraint(greaterThanOrEqualTo: view.topAnchor).isActive = true
-        keyboard.heightAnchor.constraint(equalToConstant: 128).isActive = true
-        keyboard.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        keyboardScaleSlider.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -8).isActive = true
+        keyboardScaleSlider.widthAnchor.constraint(equalToConstant: 128).isActive = true
+        keyboardScaleSlider.bottomAnchor.constraint(equalTo: keyboardScrollView.topAnchor, constant: -4).isActive = true
+
+        keyboardScrollView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        keyboardScrollView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        keyboardScrollView.heightAnchor.constraint(equalToConstant: 128).isActive = true
+        keyboardScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        keyboard.topAnchor.constraint(equalTo: keyboardScrollView.topAnchor).isActive = true
+        keyboard.bottomAnchor.constraint(equalTo: keyboardScrollView.bottomAnchor).isActive = true
+        keyboardWidthConstraint.isActive = true
     }
 
     override func viewDidAppear() {
@@ -80,6 +100,20 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier.flexibleSpace, at: 0)
         toolbar.insertItem(withItemIdentifier: NSToolbarItem.Identifier(rawValue: "MIDISynth"), at: 1)
         view.window?.toolbar = toolbar
+    }
+
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        updateKeyboardScale()
+    }
+
+    private func updateKeyboardScale() {
+        keyboardWidthConstraint.constant = view.bounds.width * keyboardWidthScale
+    }
+
+    @objc func keyboardScaleSliderValueChanged(_ sender: AnyObject?) {
+        guard let slider = sender as? NSControl else { return }
+        keyboardWidthScale = CGFloat(slider.floatValue)
     }
 
     func collectionView(_ collectionView: NSCollectionView, numberOfItemsInSection section: Int) -> Int {

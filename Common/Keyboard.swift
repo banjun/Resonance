@@ -57,21 +57,21 @@ public final class Keyboard: View {
     public init() {
         self.keyViews = [
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
+            [WhiteKeyView("C1"), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
+            [WhiteKeyView("C2"), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
+            [WhiteKeyView("C3"), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
+            [WhiteKeyView("C4"), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
+            [WhiteKeyView("C5"), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
+            [WhiteKeyView("C6"), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
+            [WhiteKeyView("C7"), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
             [WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView(), BlackKeyView(), WhiteKeyView()],
-            [WhiteKeyView()],
+            [WhiteKeyView("C8")],
         ].flatMap {$0}
         super.init(frame: .zero)
 
@@ -191,7 +191,7 @@ public final class Keyboard: View {
 
         private let highlightView = View()
 
-        init() {
+        init(_ label: String? = nil) {
             super.init(frame: .zero)
             wantsLayer = true
             highlightView.wantsLayer = true
@@ -203,6 +203,27 @@ public final class Keyboard: View {
             highlightView.rightAnchor.constraint(equalTo: rightAnchor).isActive = true
             highlightView.topAnchor.constraint(equalTo: topAnchor).isActive = true
             highlightView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+            if let label = label {
+                let labelView: View
+                #if os(macOS)
+                labelView = NSTextField(labelWithAttributedString: .init(string: label, attributes: [.foregroundColor: Color.lightGray]))
+                #elseif os(iOS)
+                labelView = {
+                    let l = UILabel()
+                    l.text = label
+                    l.textColor = Color.lightGray
+                    l.minimumScaleFactor = 0.2
+                    l.adjustsFontSizeToFitWidth = true
+                    l.textAlignment = .center
+                    return l
+                }()
+                #endif
+                labelView.translatesAutoresizingMaskIntoConstraints = false
+                addSubview(labelView)
+                labelView.leftAnchor.constraint(equalTo: leftAnchor, constant: 2).isActive = true
+                labelView.rightAnchor.constraint(equalTo: rightAnchor, constant: -2).isActive = true
+                labelView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8).isActive = true
+            }
             reset()
         }
         required init?(coder: NSCoder) {
@@ -221,7 +242,7 @@ public final class Keyboard: View {
     }
 
     final class BlackKeyView: View, KeyboardNoteViewType {
-        static let backgroundColor = Color.init(white: 0.1, alpha: 1)
+        static let backgroundColor = Color.init(white: 0.2, alpha: 1)
         static let highlightColor = Color.systemGreen
 
         private let highlightView = View()
