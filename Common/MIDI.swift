@@ -95,8 +95,9 @@ public struct Packet: Equatable, Hashable {
         self.timeStamp = midiPacket.timeStamp
 
         var midiPacket = midiPacket
-        var data = [UInt8](repeating: 0, count: Int(midiPacket.length))
-        memcpy(&data, &midiPacket.data, Int(midiPacket.length))
+        let length = min(Int(midiPacket.length), MemoryLayout.size(ofValue: midiPacket.data))
+        var data = [UInt8](repeating: 0, count: length)
+        memcpy(&data, &midiPacket.data, length)
         self.data = Event(data)
     }
 }
