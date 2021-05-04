@@ -45,6 +45,8 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         }
     }
 
+    private let noteRollView = NoteRollView()
+
     private let midiSynth = MIDISynth()
 
     override func viewDidLoad() {
@@ -53,6 +55,9 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
 
         eventsView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(eventsView)
+
+        noteRollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(noteRollView)
 
         let keyboardScaleSlider = NSSlider(value: 1, minValue: 1, maxValue: 5, target: self, action: #selector(keyboardScaleSliderValueChanged(_:)))
         keyboardScaleSlider.numberOfTickMarks = 5
@@ -70,9 +75,14 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         eventsView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         eventsView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         eventsView.topAnchor.constraint(equalTo: view.topAnchor).isActive = true
-        eventsView.bottomAnchor.constraint(equalTo: keyboardScaleSlider.topAnchor, constant: -4).isActive = true
+        eventsView.bottomAnchor.constraint(equalTo: noteRollView.topAnchor).isActive = true
         eventsView.widthAnchor.constraint(greaterThanOrEqualToConstant: 256).isActive = true
-        eventsView.heightAnchor.constraint(greaterThanOrEqualToConstant: 256).isActive = true
+        eventsView.heightAnchor.constraint(equalToConstant: 64).isActive = true
+
+        noteRollView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
+        noteRollView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
+        noteRollView.heightAnchor.constraint(greaterThanOrEqualToConstant: 256).isActive = true
+        noteRollView.bottomAnchor.constraint(equalTo: keyboardScaleSlider.topAnchor, constant: -4).isActive = true
 
         keyboardScaleSlider.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -8).isActive = true
         keyboardScaleSlider.widthAnchor.constraint(equalToConstant: 128).isActive = true
@@ -120,6 +130,8 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
             default:
                 break
             }
+
+            noteRollView.appendPacket(packet)
 
             midiSynth.play(event: packet.data)
         }.store(in: &cancellables)

@@ -20,6 +20,7 @@
 		EA405B50263EE1FC00D5CC78 /* Common.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = EA405B3F263EE04100D5CC78 /* Common.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		EA405B5E263EFBD900D5CC78 /* SystemResource in Resources */ = {isa = PBXBuildFile; fileRef = EA405B5D263EFBD900D5CC78 /* SystemResource */; };
 		EA405B5F263EFE3500D5CC78 /* Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAEB1E3B263D6FB700524B81 /* Keyboard.swift */; };
+		EA9770822641AA08008501CA /* NoteRollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA9770812641AA08008501CA /* NoteRollView.swift */; };
 		EAACB154263EDD1600DEA1D2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAACB153263EDD1600DEA1D2 /* AppDelegate.swift */; };
 		EAACB158263EDD1600DEA1D2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAACB157263EDD1600DEA1D2 /* ViewController.swift */; };
 		EAACB15D263EDD1700DEA1D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EAACB15C263EDD1700DEA1D2 /* Assets.xcassets */; };
@@ -83,6 +84,9 @@
 		EA405B54263EEA2700D5CC78 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		EA405B5D263EFBD900D5CC78 /* SystemResource */ = {isa = PBXFileReference; lastKnownFileType = folder; path = SystemResource; sourceTree = "<group>"; };
 		EA405B60263EFE4400D5CC78 /* Resonance-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Resonance-ios.entitlements"; sourceTree = "<group>"; };
+		EA9770812641AA08008501CA /* NoteRollView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NoteRollView.swift; sourceTree = "<group>"; };
+		EA97708A2641AA60008501CA /* Previews.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Previews.h; sourceTree = "<group>"; };
+		EA97708B2641AA60008501CA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EAACB14B263DAE3400DEA1D2 /* MIDISynth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDISynth.swift; sourceTree = "<group>"; };
 		EAACB151263EDD1600DEA1D2 /* Resonance-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Resonance-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EAACB153263EDD1600DEA1D2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -128,6 +132,7 @@
 				EA26E6C7263C3F8C006596D5 /* Resonance */,
 				EA405B40263EE04100D5CC78 /* Common */,
 				EAACB152263EDD1600DEA1D2 /* Resonance-ios */,
+				EA9770892641AA60008501CA /* Previews */,
 				EA26E6C6263C3F8C006596D5 /* Products */,
 				EA405B4E263EE1FC00D5CC78 /* Frameworks */,
 			);
@@ -149,6 +154,7 @@
 				EA26E6C8263C3F8C006596D5 /* AppDelegate.swift */,
 				EA26E6CA263C3F8C006596D5 /* ViewController.swift */,
 				EAEB1E37263D6CE600524B81 /* StickyCollectionView.swift */,
+				EA9770812641AA08008501CA /* NoteRollView.swift */,
 				EA26E6CC263C3F95006596D5 /* Assets.xcassets */,
 				EA26E6CE263C3F95006596D5 /* Main.storyboard */,
 				EA26E6D1263C3F95006596D5 /* Info.plist */,
@@ -175,6 +181,15 @@
 				EA405B54263EEA2700D5CC78 /* AVFoundation.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		EA9770892641AA60008501CA /* Previews */ = {
+			isa = PBXGroup;
+			children = (
+				EA97708A2641AA60008501CA /* Previews.h */,
+				EA97708B2641AA60008501CA /* Info.plist */,
+			);
+			path = Previews;
 			sourceTree = "<group>";
 		};
 		EAACB152263EDD1600DEA1D2 /* Resonance-ios */ = {
@@ -338,6 +353,7 @@
 				EA26E6CB263C3F8C006596D5 /* ViewController.swift in Sources */,
 				EA26E6C9263C3F8C006596D5 /* AppDelegate.swift in Sources */,
 				EAEB1E38263D6CE600524B81 /* StickyCollectionView.swift in Sources */,
+				EA9770822641AA08008501CA /* NoteRollView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

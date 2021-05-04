@@ -217,6 +217,13 @@ public struct Packet: Equatable, Hashable {
     public var timeStamp: MIDITimeStamp
     public var data: Event
 
+    /// memberwise init
+    public init(timeStamp: MIDITimeStamp, data: Event) {
+        self.timeStamp = timeStamp
+        self.data = data
+    }
+
+    /// init with CoreMIDI packets
     public init(_ midiPacket: MIDIPacket) {
         self.timeStamp = midiPacket.timeStamp
 
@@ -225,6 +232,23 @@ public struct Packet: Equatable, Hashable {
         var data = [UInt8](repeating: 0, count: length)
         memcpy(&data, &midiPacket.data, length)
         self.data = Event(data)
+    }
+
+    /// convenience init eliminating `mach_absolute_time`
+    public init(timeStampInSeconds: TimeInterval, data: Event) {
+        let timebase: mach_timebase_info_t = .allocate(capacity: 1)
+        mach_timebase_info(timebase)
+        self.timeStamp = UInt64(timeStampInSeconds * Double(NSEC_PER_SEC) * Double(timebase.pointee.denom) / Double(timebase.pointee.numer))
+        self.data = data
+    }
+
+    public var timeStampInNanoSeconds: UInt64 {
+        let timebase: mach_timebase_info_t = .allocate(capacity: 1)
+        mach_timebase_info(timebase)
+        return timeStamp * UInt64(timebase.pointee.numer) / UInt64(timebase.pointee.denom)
+    }
+    public var timeStampInSeconds: TimeInterval {
+        Double(timeStampInNanoSeconds) / Double(NSEC_PER_SEC)
     }
 }
 
@@ -293,10 +317,14 @@ public enum Event: Equatable, Hashable {
     }
 }
 
-public struct Note: RawRepresentable, CustomStringConvertible, Equatable, Hashable {
+public struct Note: RawRepresentable, CustomStringConvertible, Equatable, Hashable, ExpressibleByIntegerLiteral {
     public var rawValue: UInt8
     public init(rawValue: UInt8) {
         self.rawValue = rawValue
+    }
+
+    public init(integerLiteral value: UInt8) {
+        self.rawValue = value
     }
 
     public var octave: Int {
