@@ -3,9 +3,6 @@ import Cocoa
 public typealias View = NSView
 public typealias StackView = NSStackView
 public typealias Color = NSColor
-extension View {
-    var backgroundLayer: CALayer! {layer}
-}
 #elseif os(iOS)
 import UIKit
 public typealias View = UIView
@@ -13,18 +10,29 @@ public typealias StackView = UIStackView
 public typealias Color = UIColor
 extension UIView {
     var wantsLayer: Bool {
-        get {true}
+        get {
+            true
+        }
         set {}
     }
-    var backgroundLayer: CALayer! {layer}
 }
 extension UIStackView {
     var orientation: NSLayoutConstraint.Axis {
-        get {axis}
-        set {axis = newValue}
+        get {
+            axis
+        }
+        set {
+            axis = newValue
+        }
     }
 }
 #endif
+
+private extension View {
+    var backgroundLayer: CALayer! {
+        layer
+    }
+}
 
 public final class Keyboard: View {
     private let whiteKeysStackView = StackView()
