@@ -82,7 +82,7 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         noteRollView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         noteRollView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         noteRollView.heightAnchor.constraint(greaterThanOrEqualToConstant: 256).isActive = true
-        noteRollView.bottomAnchor.constraint(equalTo: keyboardScaleSlider.topAnchor, constant: -4).isActive = true
+        noteRollView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant:04).isActive = true
 
         keyboardScaleSlider.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -8).isActive = true
         keyboardScaleSlider.widthAnchor.constraint(equalToConstant: 128).isActive = true
@@ -91,7 +91,7 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         keyboardScrollView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
         keyboardScrollView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
         keyboardScrollView.heightAnchor.constraint(equalToConstant: 128).isActive = true
-        keyboardScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        keyboardScrollView.centerYAnchor.constraint(equalTo: noteRollView.centerYAnchor).isActive = true
         keyboard.topAnchor.constraint(equalTo: keyboardScrollView.topAnchor).isActive = true
         keyboard.bottomAnchor.constraint(equalTo: keyboardScrollView.bottomAnchor).isActive = true
         keyboardWidthConstraint.isActive = true
@@ -170,6 +170,8 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
     private let midiOutputToolbarItem = NSToolbarItem(itemIdentifier: .midiOutput)
     private let midiOutputPopUp = NSPopUpButton(title: "", target: self, action: #selector(ViewController.midiOutputDidSelect))
     private let midiSynthToolbarItem = NSToolbarItem(itemIdentifier: .midiSynth)
+    private let scrollInPlayToolbarItem = NSToolbarItem(itemIdentifier: .scrollInPlay)
+    private let scrollInPlayCheckbox = NSButton(checkboxWithTitle: "", target: self, action: #selector(ViewController.scrollInPlayDidChange))
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
         switch itemIdentifier {
@@ -189,13 +191,17 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
             midiSynthToolbarItem.target = nil
             midiSynthToolbarItem.action = #selector(ViewController.toggleMIDISynth)
             return midiSynthToolbarItem
+        case .scrollInPlay:
+            scrollInPlayToolbarItem.label = "Scroll in Play"
+            scrollInPlayToolbarItem.view = scrollInPlayCheckbox
+            return scrollInPlayToolbarItem
         default:
             return .init(itemIdentifier: itemIdentifier)
         }
     }
     
-    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiInput, .midiOutput, .space, .flexibleSpace, .midiSynth] }
-    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiInput, .midiOutput, .space, .midiSynth] }
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiInput, .midiOutput, .space, .flexibleSpace, .midiSynth, .scrollInPlay] }
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] { [.midiInput, .midiOutput, .space, .midiSynth, .space, .scrollInPlay] }
 
     @objc private func midiInputDidSelect() {
         let index = midiInputPopUp.indexOfSelectedItem
@@ -224,12 +230,18 @@ class ViewController: NSViewController, NSToolbarDelegate, NSCollectionViewDataS
         midiSynth.isEnabled.toggle()
         midiSynthToolbarItem.label = midiSynth.name + (midiSynth.isEnabled ? " Enabled" : " Muted")
     }
+
+    @objc private func scrollInPlayDidChange() {
+        noteRollView.scrollInPlay.toggle()
+        scrollInPlayCheckbox.state = noteRollView.scrollInPlay ? .on : .off
+    }
 }
 
 private extension NSToolbarItem.Identifier {
     static let midiSynth: NSToolbarItem.Identifier = .init("MIDISynth")
     static let midiInput: NSToolbarItem.Identifier = .init("MIDIInput")
     static let midiOutput: NSToolbarItem.Identifier = .init("MIDIOutput")
+    static let scrollInPlay: NSToolbarItem.Identifier = .init("ScrollInPlay")
 }
 
 final class EventsLayout: NSCollectionViewLayout {

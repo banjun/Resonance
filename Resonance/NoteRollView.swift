@@ -3,13 +3,43 @@ import Common
 
 final class NoteRollView: NSView, NSCollectionViewDataSource {
     /// assuming 120 BPM, i.e. 2 beats / sec, 0.5 sec lays out in 20pt.
-    var scalePointPerBeat: CGFloat = 20 {
-        didSet {
-            rollLayout.scalePointPerBeat = scalePointPerBeat
-        }
+    var scalePointPerBeat: CGFloat {
+        get {rollLayout.scalePointPerBeat}
+        set {rollLayout.scalePointPerBeat = newValue}
     }
     /// mach_absolute_time comes from MIDIPacket
     var timeOrigin: TimeInterval = 0
+    var scrollInPlay = false {
+        didSet {
+            if scrollInPlay {
+                let status = CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
+                NSLog("CVDisplayLinkCreateWithActiveCGDisplays = \(status)")
+            } else {
+                displayLink = nil
+            }
+        }
+    }
+    private var displayLink: CVDisplayLink? = nil {
+        didSet {
+            if let oldValue = oldValue {
+                CVDisplayLinkStop(oldValue)
+            }
+            if let newValue = displayLink {
+                let status = CVDisplayLinkSetOutputCallback(newValue, { _, now, outputTime, _, _, displayLinkContext in
+                    let s = unsafeBitCast(displayLinkContext!, to: NoteRollView.self)
+                    let elapsed = Packet(timeStamp: outputTime.pointee.hostTime, data: .unknown([])).timeStampInSeconds - s.timeOrigin
+                    DispatchQueue.main.async {
+                        let bottomPadding: CGFloat = 500
+                        let p = NSPoint(x: 0, y: s.collectionView.bounds.height - bottomPadding - s.scrollView.bounds.height / 2 - 64 - CGFloat(elapsed) * s.scalePointPerBeat)
+                        s.collectionView.scroll(p)
+                    }
+                    return kCVReturnSuccess
+                }, Unmanaged.passUnretained(self).toOpaque())
+                NSLog("CVDisplayLinkSetOutputCallback = \(status)")
+                CVDisplayLinkStart(newValue)
+            }
+        }
+    }
 
     private var notes: [Note] = [] {
         didSet {
@@ -131,14 +161,16 @@ private class RollLayout: NSCollectionViewLayout {
             let noteNumberOffset = -21
             let noteWidth = area.width / keys
             let earliestNoteStart = CGFloat(notes.compactMap {$0}.min {$0.start < $1.start}?.start ?? 0)
+            let bottomPadding: CGFloat = 500
 
             attributes = zip(indexPaths, notes).compactMap {indexPath, note in note.map {(indexPath, $0)}}.map { indexPath, note in
                 let a = NSCollectionViewLayoutAttributes(forItemWith: indexPath)
+                let noteHeight = CGFloat(note.end.map {$0 - note.start} ?? 3) * scalePointPerBeat
                 a.frame = .init(
                     x: CGFloat(note.note + noteNumberOffset) * noteWidth,
-                    y: (CGFloat(note.start) - earliestNoteStart) * scalePointPerBeat,
+                    y: area.height - bottomPadding - noteHeight - (CGFloat(note.start) - earliestNoteStart) * scalePointPerBeat,
                     width: noteWidth,
-                    height: CGFloat((note.end ?? 100) - note.start) * scalePointPerBeat)
+                    height: noteHeight)
                 return a
             }
         } else {
