@@ -55,6 +55,13 @@ public final class MIDISynth {
             instrument.stopNote(note.rawValue, onChannel: channel)
         case .programChange(channel: let channel, program: let program):
             instrument.sendProgramChange(program, onChannel: channel)
+        case .controlChange(channel: let channel, message: let message):
+            switch message {
+            case .damperPedalOnOff(value: let value):
+                instrument.sendController(64, withValue: value, onChannel: channel)
+            default:
+                break
+            }
         default:
             break
         }
