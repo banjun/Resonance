@@ -76,8 +76,13 @@ public struct Source {
         if numberOfSources > 0 {
             // normal case
             return (0..<numberOfSources).map {Source(MIDIGetSource($0))}.sorted { a, b in
-                (a.model ?? "") < (b.model ?? "")
-            }.reversed()
+                guard let a = a.model, let b = b.model else { return true }
+                switch (a.contains("USB"), b.contains("USB"), a, b) {
+                case (true, false, _, _): return true
+                case (false, true, _, _): return false
+                case (_, _, let a, let b): return a < b
+                }
+            }
         }
         // some devices incorrectly report MIDIGetNumberOfSources as zero. it may be different from enumerating sources from devices
         // confirmed on iPad Pro (12.9-inch) (3rd generation) iPadOS 13.4 (17E255)
@@ -343,5 +348,73 @@ public struct Note: RawRepresentable, CustomStringConvertible, Equatable, Hashab
 
     public var description: String {
        labelInSharps + String(octave)
+    }
+}
+
+public final class NetworkSession: NSObject, NetServiceBrowserDelegate, NetServiceDelegate {
+    public static let `default` = NetworkSession()
+    public let sessionDidChanges = PassthroughSubject<Set<MIDINetworkConnection>, Never>()
+    let midiNetworkSession: MIDINetworkSession
+    let browser = NetServiceBrowser()
+    private var foundServices: [NetService] = []
+
+    override init() {
+        self.midiNetworkSession = .default()
+        midiNetworkSession.isEnabled = true
+        midiNetworkSession.connectionPolicy = .anyone
+        super.init()
+        NotificationCenter.default.addObserver(self, selector: #selector(sessionDidChange(_:)), name: .init(MIDINetworkNotificationSessionDidChange), object: midiNetworkSession)
+
+        browser.delegate = self
+        browser.includesPeerToPeer = true
+    }
+
+    public func startSearching() {
+        // for iOS, in Info.plist, NSBonjourServices = "_apple-midi._udp" and NSLocalNetworkUsageDescription = something are required
+        // for macOS, app-sandbox requires com.apple.security.network.client
+        browser.searchForServices(ofType: MIDINetworkBonjourServiceType, inDomain: "local.")
+    }
+
+    public func stopSearching() {
+        browser.stop()
+    }
+
+    @objc func sessionDidChange(_ notification: Notification) {
+        // NSLog("%@", "midiNetworkSession.sourceEndpoint = \(midiNetworkSession.sourceEndpoint()), midiNetworkSession.destinationEndpoint = \(midiNetworkSession.destinationEndpoint())")
+        sessionDidChanges.send(midiNetworkSession.connections())
+    }
+
+    public func netServiceBrowserWillSearch(_ browser: NetServiceBrowser) {
+        NSLog("%@", "\(#function)")
+    }
+    public func netServiceBrowserDidStopSearch(_ browser: NetServiceBrowser) {
+        NSLog("%@", "\(#function)")
+    }
+    public func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String : NSNumber]) {
+        NSLog("%@", "\(#function), errorDict = \(errorDict)")
+    }
+    public func netServiceBrowser(_ browser: NetServiceBrowser, didFindDomain domainString: String, moreComing: Bool) {
+        NSLog("%@", "\(#function), domainString = \(domainString), moreComing = \(moreComing)")
+    }
+    public func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
+        NSLog("%@", "\(#function), service = \(service), moreComing = \(moreComing)")
+        service.delegate = self
+        service.resolve(withTimeout: 30)
+        foundServices.append(service)
+    }
+    public func netServiceDidResolveAddress(_ service: NetService) {
+        NSLog("%@", "\(#function), service = \(service)")
+        // NOTE: macOS cannot initialize MIDINetworkHost on native nor Catalyst. I think Apple have not implemented yet although availability is 10.15+.
+        // workaround on macOS: the user can open Audio MIDI Setup.app and manually setup connections in the MIDI network setup window each time disconnection happens.
+        let host = MIDINetworkHost(name: service.name, netService: service)
+        let result = midiNetworkSession.addConnection(MIDINetworkConnection(host: host))
+        NSLog("%@", "\(#function), host = \(host), addConnection = \(result)")
+        foundServices = foundServices.filter {service != $0}
+    }
+    public func netServiceBrowser(_ browser: NetServiceBrowser, didRemoveDomain domainString: String, moreComing: Bool) {
+        // NSLog("%@", "\(#function), domainString = \(domainString), moreComing = \(moreComing)")
+    }
+    public func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
+        // NSLog("%@", "\(#function), service = \(service), moreComing = \(moreComing)")
     }
 }
