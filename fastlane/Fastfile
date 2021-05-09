@@ -1,0 +1,35 @@
+fastlane_version "2.66.0"
+
+default_platform :ios
+
+lane :bump do
+  ensure_git_status_clean
+  increment_build_number
+  commit_version_bump
+end
+
+platform :ios do
+  desc "Submit a new Beta Build to Apple TestFlight"
+  desc "This will also make sure the profile is up to date"
+  lane :beta do |options|
+    bump
+    gym
+    pilot(changelog: options[:changelog], distribute_external: true, groups: ['External Testers'])
+    push_to_git_remote
+  end
+end
+
+platform :mac do
+  lane :archive do
+    app = gym(
+      scheme: 'Resonance',
+      clean: true,
+      export_method: 'developer-id',
+      codesigning_identity: 'Developer ID Application',
+      xcargs: 'DEVELOPMENT_TEAM=FPZK4WRGW7 ENABLE_HARDENED_RUNTIME=YES',
+      skip_package_pkg: true)
+    notarize(package: app, try_early_stapling: true, verbose: true)
+    zip(path: app, symlinks: true, output_path: Pathname(app).sub_ext("-#{get_version_number(target: 'Resonance')}-#{get_build_number}.zip").to_s)
+  end
+end
+
