@@ -8,7 +8,7 @@
 
 ## Build
 
-[![CI](https://github.com/banjun/Resonance/actions/workflows/main.yml/badge.svg)](https://github.com/banjun/Resonance/actions/workflows/main.yml)
+<!-- disable actions as macOS-latest is not so much latest: [![CI](https://github.com/banjun/Resonance/actions/workflows/main.yml/badge.svg)](https://github.com/banjun/Resonance/actions/workflows/main.yml) -->
 
 `Resonance` target is for Mac app. `Resonance-ios` target is for iOS app.
 
