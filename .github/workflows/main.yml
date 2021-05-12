@@ -1,0 +1,24 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build_mac:
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: bundle install
+      - run: bundle exec fastlane gym --configuration Debug --skip_archive --scheme 'Resonance'
+  build_ios:
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: bundle install
+      - run: bundle exec fastlane gym --configuration Debug --skip_archive --scheme 'Resonance-ios'  --destination 'generic/platform=iOS Simulator' --xcargs 'DEVELOPMENT_TEAM=- CODE_SIGN_IDENTITY=-'
