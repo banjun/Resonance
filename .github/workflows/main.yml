@@ -11,13 +11,13 @@ on:
 
 jobs:
   build_mac:
-    runs-on: macOS-latest
+    runs-on: macOS-11
     steps:
       - uses: actions/checkout@v2
       - run: bundle install
       - run: bundle exec fastlane gym --configuration Debug --skip_archive --scheme 'Resonance'
   build_ios:
-    runs-on: macOS-latest
+    runs-on: macOS-11
     steps:
       - uses: actions/checkout@v2
       - run: bundle install
