@@ -1,4 +1,5 @@
 # Resonance
+[![CI](https://github.com/banjun/Resonance/actions/workflows/main.yml/badge.svg)](https://github.com/banjun/Resonance/actions/workflows/main.yml)
 
 <h3 align="center">
   <a href="https://github.com/banjun/Resonance/releases">
