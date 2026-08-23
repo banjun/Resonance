@@ -3,7 +3,7 @@ import Cocoa
 public typealias View = NSView
 public typealias StackView = NSStackView
 public typealias Color = NSColor
-#elseif os(iOS)
+#elseif canImport(UIKit)
 import UIKit
 public typealias View = UIView
 public typealias StackView = UIStackView
@@ -219,7 +219,7 @@ public final class Keyboard: View {
                     p.alignment = .center
                     return p
                 }()]))
-                #elseif os(iOS)
+                #elseif canImport(UIKit)
                 labelView = {
                     let l = UILabel()
                     l.text = label

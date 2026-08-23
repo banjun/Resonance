@@ -50,17 +50,21 @@ public final class Client {
         self.midiClientRef = midiClientRef
 
         var inputPortRef: MIDIPortRef = 0
-        status = MIDIInputPortCreateWithBlock(midiClientRef, "Input" as CFString, &inputPortRef) { [weak self] pktlist, srcConnRefCon in
+        status = MIDIInputPortCreateWithProtocol(midiClientRef, "Input" as CFString, ._1_0, &inputPortRef) { [weak self] eventList, srcConnRefCon in
             if let thruDestination = self?.thruDestination, let thruOutputPortRef = self?.thruOutputPortRef {
                 // manually send to output as we cannot tell whether MIDIThru... API works or not
-                MIDISend(thruOutputPortRef, thruDestination.endpointRef, pktlist)
+                MIDISendEventList(thruOutputPortRef, thruDestination.endpointRef, eventList)
             }
 
-            var packet = pktlist.pointee.packet
-            packets.send(Packet(packet))
-            (1..<pktlist.pointee.numPackets).forEach { _ in
-                packet = MIDIPacketNext(&packet).pointee
-                packets.send(Packet(packet))
+            var packet = eventList.pointee.packet
+            if let v = Packet(packet) {
+                packets.send(v)
+            }
+            (1..<eventList.pointee.numPackets).forEach { _ in
+                packet = MIDIEventPacketNext(&packet).pointee
+                if let v = Packet(packet) {
+                    packets.send(v)
+                }
             }
         }
         guard status == noErr else { return nil }
@@ -231,6 +235,15 @@ public struct Packet: Equatable, Hashable {
         memcpy(&data, &midiPacket.data, length)
         self.data = Event(data)
     }
+
+    public init?(_ midiPacket: MIDIEventPacket) {
+        self.timeStamp = midiPacket.timeStamp
+        if midiPacket.wordCount > 1 {
+            NSLog("%@", "TODO: midiPacket.wordCount > 1 (\(midiPacket.wordCount)). just omitting")
+        }
+        guard let data = Event(midiPacket.words.0) else { return nil }
+        self.data = data
+    }
 }
 
 public enum Event: Equatable, Hashable {
@@ -295,6 +308,16 @@ public enum Event: Equatable, Hashable {
         default:
             self = .unknown(data)
         }
+    }
+
+    public init?(_ word: UInt32) {
+        let messageType = UInt16((word >> 24) & 0xF0)
+        guard messageType == 0x020 else { return nil }
+        self.init([
+            UInt8((word >> 16) & 0xFF),
+            UInt8((word >> 8) & 0xFF),
+            UInt8(word & 0xFF)
+        ])
     }
 }
 
